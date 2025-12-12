@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { db, ensureAccount } from './db';
+import { createSessionRecord, ensureAccount, getSession, getUserById } from './db';
 
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
@@ -18,7 +18,7 @@ export function verifyPassword(password: string, hash: string) {
 export function createSession(userId: number) {
   const token = randomUUID();
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE;
-  db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(token, userId, expiresAt);
+  createSessionRecord(token, userId, expiresAt);
   return { token, expiresAt };
 }
 
@@ -26,10 +26,10 @@ export function getUserFromCookies() {
   const cookieStore = cookies();
   const token = cookieStore.get('session_token')?.value;
   if (!token) return null;
-  const session = db.prepare('SELECT * FROM sessions WHERE token = ? AND expires_at > strftime("%s", "now")').get(token);
+  const session = getSession(token);
   if (!session) return null;
-  const user = db.prepare('SELECT id, email, name FROM users WHERE id = ?').get(session.user_id);
-  return user || null;
+  const user = getUserById(session.user_id);
+  return user ? { id: user.id, email: user.email, name: user.name } : null;
 }
 
 export function requireAuth(): NextResponse | { userId: number } {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { attachSession, createSession, hashPassword } from '@/lib/auth';
-import { db, ensureAccount } from '@/lib/db';
+import { createUser, ensureAccount, getUserByEmail } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
@@ -9,13 +9,12 @@ export async function POST(request: NextRequest) {
   if (!email || !password || !name) {
     return NextResponse.json({ message: 'همه فیلدها الزامی هستند' }, { status: 400 });
   }
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const existing = getUserByEmail(email);
   if (existing) {
     return NextResponse.json({ message: 'کاربری با این ایمیل وجود دارد' }, { status: 400 });
   }
   const passwordHash = hashPassword(password);
-  const result = db.prepare('INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)').run(email, passwordHash, name);
-  const userId = Number(result.lastInsertRowid);
+  const userId = createUser(email, passwordHash, name);
   ensureAccount(userId);
   const { token, expiresAt } = createSession(userId);
   const response = NextResponse.json({ message: 'ثبت‌نام موفق بود' });
