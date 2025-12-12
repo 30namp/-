@@ -1,8 +1,7 @@
 import './globals.css';
-import { ConfigProvider, theme } from 'antd';
-import faIR from 'antd/locale/fa_IR';
 import type { Metadata } from 'next';
 import { Vazirmatn } from 'next/font/google';
+import { AntdProvider } from './providers';
 
 const vazir = Vazirmatn({ subsets: ['arabic'], weight: ['400', '700'] });
 
@@ -19,9 +18,7 @@ export default function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body className={vazir.className}>
-        <ConfigProvider locale={faIR} theme={{ algorithm: theme.defaultAlgorithm }}>
-          {children}
-        </ConfigProvider>
+        <AntdProvider>{children}</AntdProvider>
       </body>
     </html>
   );
