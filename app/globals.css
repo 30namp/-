@@ -1,0 +1,25 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fa;
+}
+
+.ant-layout {
+  min-height: 100vh;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.section-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
