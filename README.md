@@ -8,8 +8,8 @@ A lightweight HTTPS video-call platform with room owner approval, admin controls
    npm install
    ```
 2. Put TLS files in:
-   - `certs/key.pem`
-   - `certs/cert.pem`
+   - `certs/privkey.pem`
+   - `certs/fullchain.pem`
    (or set `TLS_KEY_PATH` / `TLS_CERT_PATH` env vars)
 3. Run:
    ```bash

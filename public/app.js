@@ -78,7 +78,8 @@ function renderAuth() {
 }
 
 function connectSocket() {
-  state.socket = io({ withCredentials: true });
+  const sessionToken = document.cookie.split('; ').find((v) => v.startsWith('sessionToken='))?.split('=')[1];
+  state.socket = io({ auth: { sessionToken } });
 
   state.socket.on('connect', () => {
     renderLobby();
@@ -129,20 +130,16 @@ function connectSocket() {
   });
 
   state.socket.on('webrtc-signal', async ({ from, data }) => {
-    try {
-      const peer = makePeerConnection(from, false);
-      if (data.sdp) {
-        await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
-        if (data.sdp.type === 'offer') {
-          const answer = await peer.pc.createAnswer();
-          await peer.pc.setLocalDescription(answer);
-          state.socket.emit('webrtc-signal', { to: from, data: { sdp: peer.pc.localDescription } });
-        }
+    const peer = makePeerConnection(from, false);
+    if (data.sdp) {
+      await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      if (data.sdp.type === 'offer') {
+        const answer = await peer.pc.createAnswer();
+        await peer.pc.setLocalDescription(answer);
+        state.socket.emit('webrtc-signal', { to: from, data: { sdp: peer.pc.localDescription } });
       }
-      if (data.ice) await peer.pc.addIceCandidate(new RTCIceCandidate(data.ice));
-    } catch (err) {
-      toast(`WebRTC signal error: ${err.message}`);
     }
+    if (data.ice) await peer.pc.addIceCandidate(new RTCIceCandidate(data.ice));
   });
 }
 
@@ -184,7 +181,7 @@ function renderLobby() {
       const monitor = document.createElement('button');
       monitor.textContent = state.ghostMode ? 'Ghost monitor' : 'Visible monitor';
       monitor.onclick = () => {
-        state.socket.emit('admin-join-room', { roomId: r.id, visible: state.ghostMode ? false : true }, (res) => {
+        state.socket.emit('admin-join-room', { roomId: r.id, visible: !state.ghostMode }, (res) => {
           if (res.error) return toast(res.error);
           state.room = res.room;
           startCallUI();
